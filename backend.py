@@ -1,7 +1,9 @@
 from secrets import slack_token
+from secrets import slack_token_mary
 if len(slack_token) < 1:
   raise ValueError('Slack token must be set')
 
+from subprocess import call
 from flask import Flask
 from flask import request
 app = Flask(__name__)
@@ -52,6 +54,19 @@ def play_something(url):
     _ = [play_yt_vid(target, id) for target in targets]
     return str(len(_)) + " chromecasts are now playing video id " + id
   return 'invalid url!'
+
+def say(txt):
+  def task():
+    call(['say', txt])
+  t = threading.Thread(target=task)
+  t.start()
+  return 'Mary is now saying ' + txt
+
+@app.route("/mary", methods=['POST'])
+def mary():
+  if request.form['token'] != slack_token_mary:
+    return 'Token not set'
+  return say(request.form['text'])
 
 @app.route("/", methods=['GET', 'POST'])
 def hello():
