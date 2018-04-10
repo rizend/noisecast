@@ -11,9 +11,16 @@ app = Flask(__name__)
 import pychromecast
 import pychromecast.controllers.youtube as youtube
 import threading
+import urllib
 
 chromecasts = pychromecast.get_chromecasts()
 controllers = {}
+
+def get_url_query(url):
+    """
+    Returns the query params of a url as a dict
+    """
+    return urllib.parse.parse_qs(urllib.parse.urlparse(url).query)
 
 def list_chromecasts():
   return '\tChromecasts:\n' + '\n'.join([x.device.friendly_name + " - " + x.status.status_text + " (" + (str(x.status.volume_level) if not x.status.volume_muted else "muted") + ")" for x in chromecasts])
@@ -50,7 +57,7 @@ def play_yt_vid(cast, id):
 def play_something(url):
   if url.startswith('https://www.youtube.com/watch?v='):
     targets = get_specified_chromecasts('all')
-    id = url.split("=")[1]
+    id = get_url_query(url)["v"][0]
     _ = [play_yt_vid(target, id) for target in targets]
     return str(len(_)) + " chromecasts are now playing video id " + id
   return 'invalid url!'
