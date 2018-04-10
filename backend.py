@@ -8,6 +8,7 @@ app = Flask(__name__)
 
 import pychromecast
 import pychromecast.controllers.youtube as youtube
+import threading
 
 chromecasts = pychromecast.get_chromecasts()
 
@@ -29,9 +30,12 @@ def get_specified_chromecasts(descriptor):
   return [get_chromecast(descriptor)]
 
 def play_yt_vid(cast, id):
-  yt = youtube.YouTubeController()
-  cast.register_handler(yt)
-  yt.play_video(id)
+  def task():
+    yt = youtube.YouTubeController()
+    cast.register_handler(yt)
+    yt.play_video(id)
+  t = threading.Thread(target=task)
+  t.start()
 
 def play_something(url):
   if url.startswith('https://www.youtube.com/watch?v='):
