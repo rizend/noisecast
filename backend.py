@@ -11,6 +11,7 @@ import pychromecast.controllers.youtube as youtube
 import threading
 
 chromecasts = pychromecast.get_chromecasts()
+controllers = {}
 
 def list_chromecasts():
   return '\tChromecasts:\n' + '\n'.join([x.device.friendly_name + " - " + x.status.status_text + " (" + (str(x.status.volume_level) if not x.status.volume_muted else "muted") + ")" for x in chromecasts])
@@ -31,10 +32,17 @@ def get_specified_chromecasts(descriptor):
 
 def play_yt_vid(cast, id):
   def task():
-    yt = youtube.YouTubeController()
-    cast.register_handler(yt)
-    yt.play_video(id)
-  t = threading.Thread(target=task)
+    if not cast.uuid in controllers:
+      yt = youtube.YouTubeController()
+      cast.register_handler(yt)
+      controllers[cast.uuid] = yt
+
+    yt = controllers[cast.uuid]
+    if yt.in_session:
+      yt.add_to_queue(id)
+    else:
+      yt.play_video(id)
+  t = threading.Thread(target=task) 
   t.start()
 
 def play_something(url):
