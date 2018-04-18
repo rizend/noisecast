@@ -1,5 +1,6 @@
 from secrets import slack_token
 from secrets import slack_token_mary
+from secrets import slack_token_cowsay
 if len(slack_token) < 1:
   raise ValueError('Slack token must be set')
 
@@ -7,6 +8,8 @@ from subprocess import call
 from flask import Flask
 from flask import request
 app = Flask(__name__)
+
+from cowpy import cow
 
 import pychromecast
 import pychromecast.controllers.youtube as youtube
@@ -134,3 +137,13 @@ def hello():
     return "unknown command"
   else:
     return "Hello World!"
+
+cowsay = cow.Cowacter().milk
+@app.route("/cowsay", methods=['POST'])
+def _cowsay():
+  if request.form['token'] != slack_token_cowsay:
+    return ':('
+  txt = request.form['text']
+  if len(txt) == 0:
+    return 'Usage: /cowsay [some text]'
+  return cowsay(txt)
